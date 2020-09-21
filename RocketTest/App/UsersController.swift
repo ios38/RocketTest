@@ -11,6 +11,7 @@ import UIKit
 class UsersController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     var usersView = UsersView()
     let navigationItemTitle = "Контакты"
+    var users = [User]()
 
     override func loadView() {
         super.loadView()
@@ -26,18 +27,26 @@ class UsersController: UIViewController, UITableViewDataSource, UITableViewDeleg
     }
     
     func loadUsers() {
-        
+        NetworkService.loadUsers { result in
+            switch result {
+            case let .success(users):
+                self.users = users
+                self.usersView.tableView.reloadData()
+            case let .failure(error):
+                print(error)
+            }
+        }
     }
     
     //MARK: - UITableViewDelegate
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 3
+        return users.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .default, reuseIdentifier: "UserCell")
-        cell.textLabel?.text = "Row \(indexPath.row)"
+        cell.textLabel?.text = users[indexPath.row].name
         return cell
 
     }
@@ -46,7 +55,7 @@ class UsersController: UIViewController, UITableViewDataSource, UITableViewDeleg
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        let userId = "\(indexPath.row)"
+        let userId = users[indexPath.row].name
         let detailsController = DetailsController(userId: userId)
         self.navigationController?.pushViewController(detailsController, animated: true)
 

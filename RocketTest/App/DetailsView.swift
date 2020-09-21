@@ -10,7 +10,7 @@ import UIKit
 import SnapKit
 
 class DetailsView: UIView {
-    var userImageView = UIImageView(image: UIImage(systemName: "gift.fill"))
+    var userImageView = UIImageView(image: UIImage(systemName: "person.circle"))
     var userNameLabel = UILabel()
 
     override init(frame: CGRect) {

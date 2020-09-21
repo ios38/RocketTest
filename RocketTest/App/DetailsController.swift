@@ -29,7 +29,7 @@ class DetailsController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        detailsView.userNameLabel.text = "User Id: \(userId)"
+        detailsView.userNameLabel.text = "\(userId)"
     }
     
 }
