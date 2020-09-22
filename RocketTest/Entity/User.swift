@@ -8,18 +8,19 @@
 
 import Foundation
 import SwiftyJSON
+import RealmSwift
 
-class User: Encodable, Decodable {
-    var userId: String
-    var name: String
+class User: Object {
+    @objc dynamic var id = ""
+    @objc dynamic var name = ""
 
-    init(userId: String, name: String) {
-        self.userId = userId
-        self.name = name
+    convenience init(from json: JSON) {
+        self.init()
+        self.id = json["_id"].stringValue
+        self.name = json["name"].stringValue
     }
-
-    init(from json: JSON) {
-        userId = json["_id"].stringValue
-        name = json["name"].stringValue
+    
+    override static func primaryKey() -> String? {
+        return "id"
     }
 }

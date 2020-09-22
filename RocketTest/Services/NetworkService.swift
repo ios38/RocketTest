@@ -35,7 +35,7 @@ class NetworkService {
             case let .success(data):
                 let json = JSON(data)
                 let usersJSONs = json["members"].arrayValue
-                let users = usersJSONs.map {User(from: $0)}
+                let users = usersJSONs.map { User(from: $0) }
                 //print("NetworkService: loaded \(users.count) users")
                 completion?(.success(users))
             case let .failure(error):

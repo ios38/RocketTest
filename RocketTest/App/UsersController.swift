@@ -7,11 +7,13 @@
 //
 
 import UIKit
+import RealmSwift
 
 class UsersController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     var usersView = UsersView()
     let navigationItemTitle = "Контакты"
     var users = [User]()
+    private lazy var realmUsers: Results<User> = try! RealmService.get(User.self)
 
     override func loadView() {
         super.loadView()
@@ -23,6 +25,7 @@ class UsersController: UIViewController, UITableViewDataSource, UITableViewDeleg
         self.navigationItem.title = navigationItemTitle
         self.usersView.tableView.dataSource = self
         self.usersView.tableView.delegate = self
+        users = Array(realmUsers)
         loadUsers()
     }
     
@@ -30,7 +33,8 @@ class UsersController: UIViewController, UITableViewDataSource, UITableViewDeleg
         NetworkService.loadUsers { result in
             switch result {
             case let .success(users):
-                self.users = users
+                try? RealmService.save(items: users)
+                //self.users = users
                 self.usersView.tableView.reloadData()
             case let .failure(error):
                 print(error)
