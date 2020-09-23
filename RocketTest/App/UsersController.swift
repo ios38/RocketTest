@@ -13,7 +13,12 @@ class UsersController: UIViewController, UITableViewDataSource, UITableViewDeleg
     var usersView = UsersView()
     let navigationItemTitle = "Контакты"
     var users = [User]()
+    var nextFrom = 0
+    var isLoading = false
+    var indexSet = IndexSet()
+    
     private lazy var realmUsers: Results<User> = try! RealmService.get(User.self)
+    private var notificationToken: NotificationToken?
 
     override func loadView() {
         super.loadView()
@@ -27,6 +32,23 @@ class UsersController: UIViewController, UITableViewDataSource, UITableViewDeleg
         self.usersView.tableView.delegate = self
         users = Array(realmUsers)
         loadUsers()
+        
+        self.notificationToken = realmUsers.observe({ [weak self] change in
+            guard let self = self else { return }
+            switch change {
+            case .initial:
+                break
+            case .update(_, _, _, _):
+                let usersCountBeforeUpdate = self.users.count
+                self.users = Array(self.realmUsers)
+                self.indexSet = IndexSet(integersIn: usersCountBeforeUpdate..<self.users.count)
+                //print("UsersController: notificationToken: indexSet: \(self.indexSet)")
+                //self.usersView.tableView.reloadData()
+                self.usersView.tableView.insertSections(self.indexSet, with: .automatic)
+            case let .error(error):
+                print(error)
+            }
+        })
     }
     
     func loadUsers() {
@@ -35,7 +57,6 @@ class UsersController: UIViewController, UITableViewDataSource, UITableViewDeleg
             case let .success(users):
                 try? RealmService.save(items: users)
                 //self.users = users
-                self.usersView.tableView.reloadData()
             case let .failure(error):
                 print(error)
             }
@@ -64,5 +85,29 @@ class UsersController: UIViewController, UITableViewDataSource, UITableViewDeleg
         self.navigationController?.pushViewController(detailsController, animated: true)
 
     }
+    
+}
 
+extension UsersController: UITableViewDataSourcePrefetching {
+    func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
+        guard let maxSection = indexPaths.map({ $0.section }).max() else { return }
+        if maxSection > users.count - 2, !isLoading {
+            print ("UsersController: DataSourcePrefetching: *** started ***")
+            isLoading = true
+            
+            NetworkService.loadUsersWithStart(startFrom: nextFrom) { result, nextFrom in
+                switch result {
+                case let .success(users):
+                    print ("UsersController: DataSourcePrefetching: result: \(users.count)")
+                    print ("UsersController: DataSourcePrefetching: nextFrom: \(nextFrom)")
+                    try? RealmService.save(items: users)
+                    //self.users = users
+                    self.nextFrom = nextFrom
+                    self.isLoading = false
+                case let .failure(error):
+                    print(error)
+                }
+            }
+        }
+    }
 }

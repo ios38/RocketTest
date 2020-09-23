@@ -43,4 +43,9 @@ class NetworkService {
             }
         }
     }
+    
+    static func loadUsersWithStart(startFrom: Int? = nil, completion: ((Swift.Result<[User], Error>, Int) -> Void)? = nil) {
+        
+    }
+
 }
